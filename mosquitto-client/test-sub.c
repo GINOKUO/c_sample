@@ -13,17 +13,24 @@
 #include <mosquitto.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <unistd.h>
+#include <json/json.h>
+#include "utility.h"
+#include "mqttTopicProvider.h"
 
 // Server connection parameters
-#define MQTT_HOSTNAME "211.75.141.112" 
+#define MQTT_HOSTNAME "127.0.0.1" 
 #define MQTT_PORT 1883
 #define MQTT_USERNAME "admin"
 #define MQTT_PASSWORD "admin"
-#define MQTT_TOPIC "E181H000027"
+#define MQTT_TOPIC gMqttTopic
 
 struct mosquitto *mosq = NULL;
 struct json_object *payload, *payload2, *payload3, *payload4, *state, *desired,*fun, *data; 
 struct json_object *interface, *res;
+
+static char gMqttTopic[256] = {0};
+
 /*
  * my_message_callback. 
  * Called whenever a new message arrives
@@ -33,12 +40,10 @@ void my_message_callback(struct mosquitto *mosq, void *obj,
   {
   // Note: nothing in the Mosquitto docs or examples suggests that we
   //  must free this message structure after processing it.
-    printf ("Tpoic:%s\n",(char *)message->topic);
-    printf ("InComing message: %s\n", (char *)message->payload);
+    printf ("gino Tpoic:%s\n ",(char *)message->topic);
+    printf ("gino InComing message: %s\n", (char *)message->payload);
 
-
-
-	//parse mqtt payload
+   //parse mqtt payload
 	/*
 		receive format ex:{"state":{"desired":{"data":{"function":"getZwaveGatewayInit"}}}}
 	*/
@@ -89,7 +94,8 @@ void my_message_callback(struct mosquitto *mosq, void *obj,
 	} else if(strcmp(json_object_get_string(fun),"getDeviceList") == 0) {
 		interface = json_object_new_object();
 		json_object_object_add(interface, "Interface", json_object_new_string("getDeviceList"));
-		json_object_object_add(interface, "deviceList", json_object_new_string("[{\"brand\":\"\",\"nodeId\":\"1\",\"deviceType\":\"\",\"name\":\"1\",\"category\":\"unknown\",\"room\":\"My Home\",\"isFavorite\":\"0\"},{\"brand\":\"\",\"nodeId\":\"47\",\"deviceType\":\"\",\"name\":\"47\",\"category\":\"unknown\",\"room\":\"My Home\",\"isFavorite\":\"0\",\"timestamp\":1540522685231}]")); 
+		json_object_object_add(interface, "deviceList", json_object_new_string("[]")); 
+		//json_object_object_add(interface, "deviceList", json_object_new_string("[{\"brand\":\"\",\"nodeId\":\"1\",\"deviceType\":\"\",\"name\":\"1\",\"category\":\"unknown\",\"room\":\"My Home\",\"isFavorite\":\"0\"},{\"brand\":\"\",\"nodeId\":\"47\",\"deviceType\":\"\",\"name\":\"47\",\"category\":\"unknown\",\"room\":\"My Home\",\"isFavorite\":\"0\",\"timestamp\":1540522685231}]")); 
 		res = json_object_new_object();
 		json_object_object_add(res, "reported", json_object_new_string(json_object_to_json_string(interface)));
 		mosquitto_publish (mosq, NULL, MQTT_TOPIC, strlen (json_object_to_json_string(res)),json_object_to_json_string(res), 0, false);
@@ -116,12 +122,34 @@ void my_message_callback(struct mosquitto *mosq, void *obj,
 
 }
 
+
+void * test(void * arg)
+  {    
+
+    while(1)
+    {
+      	mosquitto_publish (mosq, NULL, MQTT_TOPIC, strlen ("Hello gino"), "Hello gino", 0, false);
+      //printf("TEST thread!!\n");
+      //mosquitto_publish (mosq, NULL, MQTT_TOPIC, strlen ("Hello gino"), "Hello gino2", 0, false);
+      //sleep(2);
+    }
+
+    return NULL;
+  }
+
 /*
  * Start here
  */
 int main (int argc, char **argv)
   {
-  pthread_t pth;
+    if (0 != getMqttTopic(gMqttTopic, sizeof(gMqttTopic))) {
+        return -1;
+    }
+
+    if (0 != startMqttTopicProviderTask(gMqttTopic)) {
+        return -1;
+    }
+  //pthread_t pth;
  
   // Initialize the Mosquitto library
   mosquitto_lib_init();
@@ -159,7 +187,10 @@ int main (int argc, char **argv)
         }
      
       // Specify the function to call when a new message is received
-    mosquitto_message_callback_set (mosq, my_message_callback);
+      mosquitto_message_callback_set (mosq, my_message_callback);
+
+      //pthread_create(&pth, NULL, test, NULL);
+
 
 
       ret=mosquitto_loop_forever(mosq, -1, 1);
