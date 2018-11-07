@@ -13,9 +13,10 @@ LIBS=-lmosquitto -lpthread
 FLAGS=-Wall -s
 
 test-pub: test-pub.c
-	gcc $(FLAGS) -o test-pub test-pub.c $(LIBS) $(OPTIONAL_LIBS) -I/usr/include/json -L/usr/lib/i386-linux-gnu/ -ljson
+	gcc $(FLAGS) -o test-pub test-pub.c $(LIBS) $(OPTIONAL_LIBS) 
 
 test-sub: test-sub.c
-	gcc $(FLAGS) -o test-sub test-sub.c $(LIBS) $(OPTIONAL_LIBS) -I/usr/include/json -L/usr/lib/i386-linux-gnu/ -ljson
+	gcc $(FLAGS) -o test-sub test-sub.c $(LIBS) $(OPTIONAL_LIBS) 
+
 clean:
 	rm -f *.o test-pub test-sub

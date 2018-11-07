@@ -12,14 +12,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mosquitto.h>
-#include <json/json.h>
 
 // Server connection parameters
 #define MQTT_HOSTNAME "211.75.141.112" 
 #define MQTT_PORT 1883
 #define MQTT_USERNAME "admin"
 #define MQTT_PASSWORD "admin"
-#define MQTT_TOPIC "E181H000027"
+#define MQTT_TOPIC "test"
 
 /*
  * Start here
@@ -50,75 +49,20 @@ int main (int argc, char **argv)
     exit (-1);
     }
 
-    struct json_object *root, *name, *sex, *data, *edu, *prof;
- 
-	root = json_object_new_object();
-
-	json_object_object_add(root, "Interface", json_object_new_string("zwaveGatewayInit"));
-	json_object_object_add(root, "result", json_object_new_string("true")); 
-
-	data = json_object_new_object();
-	json_object_object_add(data, "reported", json_object_new_string(json_object_to_json_string(root)));
-
-        mosquitto_publish (mosq, NULL, MQTT_TOPIC, strlen (json_object_to_json_string(data)),json_object_to_json_string(data), 0, false);
-	// Decrease counter and free object
-	json_object_put(root);
-	json_object_put(data);
-        //sleep(2);
-
-
-
-/* 
-root = json_object_new_object();
-json_object_object_add(root, "name", json_object_new_string("Brianw"));
-json_object_object_add(root, "sex", json_object_new_int(0));
- 
-data = json_object_new_object();
-json_object_object_add(data, "education", json_object_new_string("master"));
-json_object_object_add(data, "profession", json_object_new_string("engineer"));
-json_object_object_add(root, "data", data);
-mosquitto_publish (mosq, NULL, MQTT_TOPIC, strlen (json_object_to_json_string(root)),json_object_to_json_string(root), 0, false);
-// Output to string
-//printf("%s", json_object_to_json_string(root));
- 
-// Decrease counter and free object
-json_object_put(data);
-json_object_put(root);
-*/
-
-
-
-
-
-
-
-/* receive json
-char buf[] = "{ \"name\": \"bar\", \"sex\": \"bar2\", \"data\": \"bar3\" }";
-
-root = json_tokener_parse(buf);
-// Use is_error() to check the result, don't use "j_root == NULL".
-
- 
-name = json_object_object_get(root, "name");
-sex = json_object_object_get(root, "sex");
-data = json_object_object_get(root, "data");
-// If parse fail, object is NULL
-if (data != NULL) {
-  edu = json_object_object_get(data, "education");
-  prof= json_object_object_get(data, "profession");
-}
- 
-
-// Fetch value
-printf("name=%s\n", json_object_get_string(name));
-printf("sex=%d\n", json_object_get_int(sex));
-printf("education=%s\n", json_object_get_string(data));
-
-// Free
-json_object_put(root);
-*/
-
- 
+  int i;
+  char text[20];
+  for (i = 0; i < 10; i++)
+    {
+    sprintf (text, "Hello, World %d", i);
+    // Publish the message to the topic
+    ret = mosquitto_publish (mosq, NULL, MQTT_TOPIC, 
+      strlen (text), text, 0, false);
+    if (ret)
+      {
+      fprintf (stderr, "Can't publish to Mosquitto server\n");
+      exit (-1);
+      }
+    }
 
   // We need a short delay here, to prevent the Mosquito library being
   //  torn down by the operating system before all the network operations
