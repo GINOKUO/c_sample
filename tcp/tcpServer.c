@@ -16,8 +16,12 @@
 #define PORT 48080
 
 int server_socket;
-struct sockaddr_in address;
+struct sockaddr_in serverAddress;
 int addrlen;
+
+
+int client_socket;
+struct sockaddr_in clientAddress;
 
 int createsocket()
 {
@@ -34,11 +38,11 @@ int createsocket()
   exit(EXIT_FAILURE);
  }
 
- address.sin_family = AF_INET;
- address.sin_addr.s_addr = INADDR_ANY;
- address.sin_port = htons(PORT);
+ serverAddress.sin_family = AF_INET;
+ serverAddress.sin_addr.s_addr = INADDR_ANY;
+ serverAddress.sin_port = htons(PORT);
 
- if(bind(server_socket,(struct sockaddr *)&address,sizeof(address))<0)
+ if(bind(server_socket,(struct sockaddr *)&serverAddress,sizeof(serverAddress))<0)
  {
   perror("bind failed");
   exit(EXIT_FAILURE);
@@ -51,16 +55,22 @@ int createsocket()
   exit(EXIT_FAILURE);
  }
  
- addrlen = sizeof(address);
+ addrlen = sizeof(serverAddress);
+
+
+
  return 1;
 }
+
 
 int main()
 {
  int new_socket;
  char recv_buffer[1024];
+ char sendbuf[1024];
  int recvck = 0;
  int Socket_OK = 0;
+ int client_Socket_OK = 0;
 
  Socket_OK = createsocket();
 
@@ -70,19 +80,37 @@ int main()
   printf("Port is %d \n",PORT);
  }
  
+
  while(Socket_OK)
  {
-  if((new_socket = accept(server_socket,(struct sockaddr*)&address,(socklen_t*)&addrlen))<0)
+  if((new_socket = accept(server_socket,(struct sockaddr*)&serverAddress,(socklen_t*)&addrlen))<0)
   {
    perror("accept");
    exit(EXIT_FAILURE);
   }
+ 
   recvck = recv(new_socket,recv_buffer,sizeof(recv_buffer),0);
   recv_buffer[recvck] = '\0';
   printf("recv <= %s\n",recv_buffer);
-  break;
+ 
+	 if(strstr(recv_buffer,"addDevice") != NULL ) {
+	  strcpy(sendbuf,"add device");
+	  printf("send =>%s\n",sendbuf);
+	  send(new_socket,sendbuf,sizeof(sendbuf),0);
+	  close(new_socket);
+	 } else if(strstr(recv_buffer,"removeDevice") != NULL ) {
+	  strcpy(sendbuf,"remove device");
+	  printf("send =>%s\n",sendbuf);
+	  send(new_socket,sendbuf,sizeof(sendbuf),0);
+	  close(new_socket);
+	 } 
+
+ 
+  //break;
  }
+
  close(server_socket);
  close(new_socket);
  return 0;
 }
+

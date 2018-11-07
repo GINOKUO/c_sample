@@ -29,7 +29,7 @@ int createsocket()
  
  serveraddr.sin_family = AF_INET;
  serveraddr.sin_port = htons(PORT);
- serveraddr.sin_addr.s_addr = inet_addr("192.168.39.4");
+ serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
  if(connect(clientsocket,(struct sockaddr *)&serveraddr,sizeof(serveraddr)) < 0)
  {
@@ -57,7 +57,7 @@ int main()
 
  while(Socket_OK)
  {
-  strcpy(sendbuf,"Hi Server");
+  strcpy(sendbuf,"removeDevice");
   printf("send =>%s\n",sendbuf);
   send(clientsocket,sendbuf,sizeof(sendbuf),0);
   close(clientsocket);
