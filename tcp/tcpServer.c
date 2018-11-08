@@ -10,6 +10,7 @@
 #include <sys/time.h>
 #include <netdb.h>
 #include <sys/stat.h>
+#include <json/json.h>
 
 #define TURE 1
 #define FALSE 0
@@ -22,6 +23,8 @@ int addrlen;
 
 int client_socket;
 struct sockaddr_in clientAddress;
+
+json_object *interface;
 
 int createsocket()
 {
@@ -99,10 +102,13 @@ int main()
 	  send(new_socket,sendbuf,sizeof(sendbuf),0);
 	  close(new_socket);
 	 } else if(strstr(recv_buffer,"removeDevice") != NULL ) {
-	  strcpy(sendbuf,"remove device");
-	  printf("send =>%s\n",sendbuf);
-	  send(new_socket,sendbuf,sizeof(sendbuf),0);
-	  close(new_socket);
+		interface = json_object_new_object();
+		json_object_object_add(interface, "MessageType", json_object_new_string("Node Remove Status"));
+		json_object_object_add(interface, "Status", json_object_new_string("Failed")); 
+		strcpy(sendbuf,json_object_to_json_string(interface));
+		printf("send =>%s\n",sendbuf);
+		send(new_socket,sendbuf,sizeof(sendbuf),0);
+		close(new_socket);
 	 } 
 
  
